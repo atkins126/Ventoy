@@ -244,6 +244,15 @@ static int ventoy_browser_valid_dirname(const char *name, int len)
         return 0;
     }
 
+    if (g_filt_trash_dir)
+    {
+        if (0 == grub_strncmp(name, ".trash-", 7) ||
+            0 == grub_strcmp(name, ".Trashes"))
+        {
+            return 0;
+        }
+    }
+
     if (name[0] == '$')
     {
         if (0 == grub_strncmp(name, "$RECYCLE.BIN", 12) ||
@@ -388,6 +397,11 @@ static int ventoy_browser_iterate_dir(const char *filename, const struct grub_di
         grub_uint64_t fsize = info->size;
         
         if (!ventoy_browser_valid_filename(filename, len, &type))
+        {
+            return 0;
+        }
+
+        if (grub_file_is_vlnk_suffix(filename, len))
         {
             return 0;
         }
@@ -616,13 +630,15 @@ grub_err_t ventoy_cmd_browser_disk(grub_extcmd_context_t ctxt, int argc, char **
 
     if (g_tree_view_menu_style == 0)
     {
-        browser_ssprintf(&mbuf, "menuentry \"%-10s [Return]\" --class=\"vtoyret\" VTOY_RET {\n  "
-                         "  echo 'return ...' \n}\n", "<--");        
+        browser_ssprintf(&mbuf, "menuentry \"%-10s [%s]\" --class=\"vtoyret\" VTOY_RET {\n  "
+                         "  echo 'return ...' \n}\n", "<--", 
+                         ventoy_get_vmenu_title("VTLANG_BROWER_RETURN"));        
     }
     else
     {
-        browser_ssprintf(&mbuf, "menuentry \"[Return]\" --class=\"vtoyret\" VTOY_RET {\n  "
-                         "  echo 'return ...' \n}\n");      
+        browser_ssprintf(&mbuf, "menuentry \"[%s]\" --class=\"vtoyret\" VTOY_RET {\n  "
+                         "  echo 'return ...' \n}\n", 
+                         ventoy_get_vmenu_title("VTLANG_BROWER_RETURN"));      
     }
 
     grub_disk_dev_iterate(ventoy_browser_iterate_disk, &mbuf);

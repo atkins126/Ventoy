@@ -200,7 +200,8 @@ const char *grub_file_get_vlnk(const char *name, int *vlnk)
 
     if (len == g_vtoy_vlnk.srclen && grub_strcmp(name, g_vtoy_vlnk.src) == 0)
     {
-        *vlnk = 1;
+        if (vlnk)
+            *vlnk = 1;
         return g_vtoy_vlnk.dst; 
     }
     
@@ -208,7 +209,8 @@ const char *grub_file_get_vlnk(const char *name, int *vlnk)
     {
         if (node->srclen == len && grub_strcmp(name, node->src) == 0)
         {
-            *vlnk = 1;
+            if (vlnk)
+                *vlnk = 1;
             return node->dst;
         }
         node = node->next;
@@ -340,10 +342,12 @@ grub_file_read (grub_file_t file, void *buf, grub_size_t len)
   if (len == 0)
     return 0;
 
-  if (grub_strncmp(file->name, GRUB_MEMFILE_MEM, grub_strlen(GRUB_MEMFILE_MEM)) == 0) {
+  if (file->name) {
+    if (grub_strncmp(file->name, GRUB_MEMFILE_MEM, grub_strlen(GRUB_MEMFILE_MEM)) == 0) {
       grub_memcpy(buf, (grub_uint8_t *)(file->data) + file->offset, len);
       file->offset += len;
       return len;
+    }
   }
   
   read_hook = file->read_hook;
